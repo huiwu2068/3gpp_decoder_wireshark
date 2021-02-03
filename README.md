@@ -2,13 +2,7 @@
 
 3gpp_decoder_wireshark is a free open source python wrapper to decode 3GPP PDUs(Protocol Data Units) via Wireshark.
 
-You can use 3gpp_decoder_wireshark decode 3GPP NR, LTE, UMTS and GSM messages for RRC, NAS, S1AP, RANAP, X2AP and RLC.
-
-# Installation
-
-Install from the git repository:
-
-git clone https://github.com/marcohuangch/3gpp_decoder_wireshark.git
+You can use 3gpp_decoder_wireshark decode 3GPP NR, LTE, UMTS and GSM messages for RRC, NAS, S1AP, RANAP, X2AP ,MAc and RLC.
 
 # Usage
 
