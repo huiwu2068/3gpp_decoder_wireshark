@@ -5,23 +5,33 @@ import tempfile
 import re
 import subprocess
 import argparse
+import os
+import binascii
 
 # Linux
-TEXT2PCAP_BIN='text2pcap'
-WIRESHARK_BIN='wireshark'
+#TEXT2PCAP_BIN='text2pcap'
+#WIRESHARK_BIN='wireshark'
 
 # Windows Wireshark Path
-#TEXT2PCAP_BIN='D:\\Program Files\\Wireshark\\text2pcap.exe'
-#WIRESHARK_BIN='D:\\Program Files\\Wireshark\\Wireshark.exe'
+TEXT2PCAP_BIN='D:\\Program Files\\Wireshark\\text2pcap.exe'
+WIRESHARK_BIN='D:\\Program Files\\Wireshark\\Wireshark.exe'
+
+exported_pdu = {
+"mac-nr-ul":b'mac_nr_udp',
+"mac-nr-dl":b'mac_nr_udp',
+"mac-lte":b'mac_lte_udp'
+}
 
 all_decode_type = {
 "ip":"IP",
 "ranap":"RANAP",
+"ngap":"NGAP",
 "s1ap":"S1AP",
 "x2ap":"X2AP",
 "f1ap":"F1AP",
 "rlc-lte":"4G RLC",
-"mac-lte":"4G MAC",
+#"mac-lte":"4G MAC",
+#"mac-nr":"5G MAC",
 "rrc.dl.dcch":"3G RRCDL-DCCH-Message",
 "rrc.ul.dcch":"3G RRCUL-DCCH-Message",
 "rrc.dl.ccch":"3G RRCDL-CCCH-Message",
@@ -133,7 +143,7 @@ all_decode_type = {
 "nr-rrc.ul.dcch":"NR RRC UL-DCCH-Message",
 "nr-rrc.rrc_reconf":"NR RRC RRCReconfiguration",
 "nr-rrc.ue_mrdc_cap":"NR RRC UE-MRDC-Capability",
-"nr-rrc.ue_nr_cap":"NR RRC UE-NR-Capability",
+"nr-rrc.ue_nr_cap":"NR RRC UE-NR-Capability"
 }
 
 def print_decode_type():
@@ -161,36 +171,57 @@ if "__main__" == __name__:
     decode_type = args.decode_type
     hex_string = args.hex_string
 
-    if decode_type not in all_decode_type.keys():
-        print("Decode type not supported")
-        sys.exit()
+    #if decode_type not in all_decode_type.keys()||decode_type not in exported_pdu.keys():
+    #    print("Decode type not supported")
+    #    sys.exit()
 
     if hex_string == '':
         print("No hex string input")
         sys.exit()
 
-    re_result, number = re.subn("([a-fA-F0-9][a-fA-F0-9])", " \\1", hex_string)
+    re_result, number = re.subn("([a-fA-F0-9][a-fA-F0-9])", " \\1", hex_string.replace(" ",""))
 
     re_result = re_result + " "
 
-    print('re_result:', re_result)
+    print('re_result:%s\n'%re_result)
 
-    temp1 = tempfile.NamedTemporaryFile(mode="w+t", delete=False)
-    temp2 = tempfile.NamedTemporaryFile(mode="w+b", delete=False)
+    temp1 = tempfile.NamedTemporaryFile(mode="w+t", delete=False,dir=os.getcwd())
+    temp2 = tempfile.NamedTemporaryFile(mode="w+b", delete=False,dir=os.getcwd())
     try:
-        print('temp1.name:', temp1.name)
-        print('temp2.name:', temp2.name)
-        temp1.write("000000")
-        temp1.write(re_result)
-        temp1.flush()
+        file_header = "000000"
         
-        subprocess.run([TEXT2PCAP_BIN, "-l 147", temp1.name, temp2.name])
-
-        subprocess.run([WIRESHARK_BIN, '-o', 'uat:user_dlts:\"User 0 (DLT=147)\",\"' + decode_type + '\",\"0\",\"\",\"0\",\"\"', temp2.name])
-        
+        if decode_type in all_decode_type.keys():
+            file_string = file_header + re_result
+            temp1.write(file_string)
+            temp1.flush()
+            subprocess.run([TEXT2PCAP_BIN, "-l 147", temp1.name, temp2.name])
+            subprocess.run([WIRESHARK_BIN, '-o', 'uat:user_dlts:\"User 0 (DLT=147)\",\"' + decode_type + '\",\"0\",\"\",\"0\",\"\"', temp2.name])
+    
+        elif decode_type in exported_pdu.keys():
+            exported_hex_bytestring = binascii.b2a_hex(exported_pdu[decode_type])
+            exported_hex_str =  bytes.decode(exported_hex_bytestring)  
+            if("mac-nr" in decode_type):
+                fixed_fields = "6d 61 63 2d 6e 72"
+                if( "dl" in decode_type):
+                    fixed_fields += "02 01 03 01"
+                else :
+                    fixed_fields += "02 00 03 01"
+                    
+            file_string = "000d000b" + exported_hex_str.ljust(11*2,'0')  + "00000000" + fixed_fields
+            file_string, number = re.subn("([a-fA-F0-9][a-fA-F0-9])", " \\1", file_string.replace(" ",""))
+            file_string = file_header + file_string + re_result
+            print(file_string)
+            temp1.write(file_string)
+            temp1.flush()
+            subprocess.run([TEXT2PCAP_BIN, "-l 252", temp1.name, temp2.name])
+            subprocess.run([WIRESHARK_BIN, temp2.name])
+        else:
+            print("Decode type not supported")
+            
     finally:
+        print("finally close\n")
         temp1.close()
+        os.remove(temp1.name)
         temp2.close()
-
-
+        os.remove(temp2.name)
 
