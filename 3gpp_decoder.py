@@ -16,15 +16,22 @@ import binascii
 TEXT2PCAP_BIN='D:\\Program Files\\Wireshark\\text2pcap.exe'
 WIRESHARK_BIN='D:\\Program Files\\Wireshark\\Wireshark.exe'
 
-exported_pdu = {
-"mac-nr-ul":b'mac_nr_udp',
-"mac-nr-dl":b'mac_nr_udp',
-"mac-lte":b'mac_lte_udp',
-"mac-nr.dl-sch",
-"mac-nr.pch",
-"mac-nr.bch",
-"mac-nr.dl-sch.bcch",
-"mac-nr.ul-sch"
+# DIRECTION_UPLINK   0
+# DIRECTION_DOWNLINK 1
+
+# NO_RNTI     0
+# P_RNTI      1
+# RA_RNTI     2
+# C_RNTI      3
+# SI_RNTI     4
+# CS_RNTI     5
+
+exported_decode_pdu ={
+"mac-nr.dl-sch":["",'00','03'],
+"mac-nr.pch":["",'00','01'],
+"mac-nr.bch":["",'00','00'],
+"mac-nr.dl-sch.bcch":["",'00','04'],
+"mac-nr.ul-sch":["",'01','03']
 }
 
 all_decode_type = {
@@ -162,12 +169,7 @@ all_decode_type = {
 # SI_RNTI     4
 # CS_RNTI     5
 
-dict ={
-"mac-nr.dl-sch":['00','03'],
-"mac-nr.pch":['00','01'],
-"mac-nr.bch":['00','00'],
-"mac-nr.dl-sch.bcch":['00','04'],
-"mac-nr.ul-sch":['01','03']}
+
 
 def print_decode_type():
     print("Supported Decoder:")
@@ -194,7 +196,7 @@ if "__main__" == __name__:
     decode_type = args.decode_type
     hex_string = args.hex_string
 
-    #if decode_type not in all_decode_type.keys()||decode_type not in exported_pdu.keys():
+    #if decode_type not in all_decode_type.keys()||decode_type not in exported_decode_pdu.keys():
     #    print("Decode type not supported")
     #    sys.exit()
 
@@ -220,16 +222,14 @@ if "__main__" == __name__:
             subprocess.run([TEXT2PCAP_BIN, "-l 147", temp1.name, temp2.name])
             subprocess.run([WIRESHARK_BIN, '-o', 'uat:user_dlts:\"User 0 (DLT=147)\",\"' + decode_type + '\",\"0\",\"\",\"0\",\"\"', temp2.name])
     
-        elif decode_type in exported_pdu.keys():
-            exported_hex_bytestring = binascii.b2a_hex(exported_pdu[decode_type])
+        elif decode_type in exported_decode_pdu.keys():
+            exported_hex_bytestring = binascii.b2a_hex(exported_decode_pdu[decode_type])
             exported_hex_str =  bytes.decode(exported_hex_bytestring)  
-            if("mac-nr" in decode_type):
-                fixed_fields = "6d 61 63 2d 6e 72"
-                if( "dl" in decode_type):
-                    fixed_fields += "02 01 03 01"
-                else :
-                    fixed_fields += "02 00 03 01"
-                    
+            
+            matchobj = re.match(r'(.*)\.(.*)',decode_type)
+            fixed_fields = matchobj.group(1)
+            fixed_fields += "02"+ exported_decode_pdu[decode_type][0] + exported_decode_pdu[decode_type][1] + "01"#"02 01 03 01"
+
             file_string = "000d000b" + exported_hex_str.ljust(11*2,'0')  + "00000000" + fixed_fields
             file_string, number = re.subn("([a-fA-F0-9][a-fA-F0-9])", " \\1", file_string.replace(" ",""))
             file_string = file_header + file_string + re_result
@@ -247,4 +247,3 @@ if "__main__" == __name__:
         os.remove(temp1.name)
         temp2.close()
         os.remove(temp2.name)
-
