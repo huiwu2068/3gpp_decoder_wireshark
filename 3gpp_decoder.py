@@ -19,7 +19,12 @@ WIRESHARK_BIN='D:\\Program Files\\Wireshark\\Wireshark.exe'
 exported_pdu = {
 "mac-nr-ul":b'mac_nr_udp',
 "mac-nr-dl":b'mac_nr_udp',
-"mac-lte":b'mac_lte_udp'
+"mac-lte":b'mac_lte_udp',
+"mac-nr.dl-sch",
+"mac-nr.pch",
+"mac-nr.bch",
+"mac-nr.dl-sch.bcch",
+"mac-nr.ul-sch"
 }
 
 all_decode_type = {
@@ -145,6 +150,24 @@ all_decode_type = {
 "nr-rrc.ue_mrdc_cap":"NR RRC UE-MRDC-Capability",
 "nr-rrc.ue_nr_cap":"NR RRC UE-NR-Capability"
 }
+
+#DIRECTION_UPLINK   0
+#DIRECTION_DOWNLINK 1
+
+/* rntiType */
+# NO_RNTI     0
+# P_RNTI      1
+# RA_RNTI     2
+# C_RNTI      3
+# SI_RNTI     4
+# CS_RNTI     5
+
+dict ={
+"mac-nr.dl-sch":['00','03'],
+"mac-nr.pch":['00','01'],
+"mac-nr.bch":['00','00'],
+"mac-nr.dl-sch.bcch":['00','04'],
+"mac-nr.ul-sch":['01','03']}
 
 def print_decode_type():
     print("Supported Decoder:")
