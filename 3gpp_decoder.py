@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+#for example: 
+#python 3gpp_decoder.py mac-nr.ul-sch "34 1e 4e 8c 47 2e 46 3f 00 00 00 00"
+#python 3gpp_decoder.py lte-rrc.dl.dcch "060800C1000426B7B134B634BA3C80"
 
 import sys
 import tempfile
@@ -24,26 +27,39 @@ WIRESHARK_BIN='D:\\Program Files\\Wireshark\\Wireshark.exe'
 # RA_RNTI     2
 # C_RNTI      3
 # SI_RNTI     4
-# CS_RNTI     5
+# CS_RNTI     5 实际解码等价于C_RNTI
 
-exported_decode_pdu ={
-"mac-nr.dl-sch":["",'00','03'],
-"mac-nr.pch":["",'00','01'],
-"mac-nr.bch":["",'00','00'],
-"mac-nr.dl-sch.bcch":["",'00','04'],
-"mac-nr.ul-sch":["",'01','03']
+l2_decode_type ={
+"mac-nr.dl-sch":['mac_nr_udp','01','03'],
+"mac-nr.pch":['mac_nr_udp','01','01'],
+"mac-nr.bch":['mac_nr_udp','01','00'],
+"mac-nr.dl-sch.bcch":['mac_nr_udp','01','04'],
+"mac-nr.ul-sch":['mac_nr_udp','00','03']
 }
 
-all_decode_type = {
-"ip":"IP",
-"ranap":"RANAP",
+l3_decode_type = {
 "ngap":"NGAP",
 "s1ap":"S1AP",
 "x2ap":"X2AP",
 "f1ap":"F1AP",
+"nr-rrc.ue_radio_paging_info":"NR RRC UERadioPagingInformation",
+"nr-rrc.ue_radio_access_cap_info":"NR UERadioAccessCapabilityInformation",
+"nr-rrc.bcch.bch":"NR BCCH-BCH-Message",
+"nr-rrc.bcch.dl.sch":"NR BCCH-DL-SCH-Message",
+"nr-rrc.dl.ccch":"NR DL-CCCH-Message",
+"nr-rrc.dl.dcch":"NR DL-DCCH-Message",
+"nr-rrc.pcch":"NR PCCH-Message",
+"nr-rrc.ul.ccch":"NR UL-CCCH-Message",
+"nr-rrc.ul.ccch1":"NR UL-CCCH1-Message",
+"nr-rrc.ul.dcch":"NR RRC UL-DCCH-Message",
+"nr-rrc.rrc_reconf":"NR RRC RRCReconfiguration",
+"nr-rrc.ue_mrdc_cap":"NR RRC UE-MRDC-Capability",
+"nr-rrc.ue_nr_cap":"NR RRC UE-NR-Capability",
 "rlc-lte":"4G RLC",
 #"mac-lte":"4G MAC",
 #"mac-nr":"5G MAC",
+"ip":"IP",
+"ranap":"RANAP",
 "rrc.dl.dcch":"3G RRCDL-DCCH-Message",
 "rrc.ul.dcch":"3G RRCUL-DCCH-Message",
 "rrc.dl.ccch":"3G RRCDL-CCCH-Message",
@@ -142,47 +158,33 @@ all_decode_type = {
 "lte-rrc.sc.mcch.nb":"4G SC-MCCH-Message-NB",
 "lte-rrc.bcch.bch.mbms":"4G BCCH-BCH-Message-MBMS",
 "lte-rrc.bcch.dl.sch.mbms":"4G BCCH-DL-SCH-Message-MBMS",
-"nas-eps":"NAS",
-"nr-rrc.ue_radio_paging_info":"NR RRC UERadioPagingInformation",
-"nr-rrc.ue_radio_access_cap_info":"NR UERadioAccessCapabilityInformation",
-"nr-rrc.bcch.bch":"NR BCCH-BCH-Message",
-"nr-rrc.bcch.dl.sch":"NR BCCH-DL-SCH-Message",
-"nr-rrc.dl.ccch":"NR DL-CCCH-Message",
-"nr-rrc.dl.dcch":"NR DL-DCCH-Message",
-"nr-rrc.pcch":"NR PCCH-Message",
-"nr-rrc.ul.ccch":"NR UL-CCCH-Message",
-"nr-rrc.ul.ccch1":"NR UL-CCCH1-Message",
-"nr-rrc.ul.dcch":"NR RRC UL-DCCH-Message",
-"nr-rrc.rrc_reconf":"NR RRC RRCReconfiguration",
-"nr-rrc.ue_mrdc_cap":"NR RRC UE-MRDC-Capability",
-"nr-rrc.ue_nr_cap":"NR RRC UE-NR-Capability"
+"nas-eps":"NAS"
 }
-
-#DIRECTION_UPLINK   0
-#DIRECTION_DOWNLINK 1
-
-/* rntiType */
-# NO_RNTI     0
-# P_RNTI      1
-# RA_RNTI     2
-# C_RNTI      3
-# SI_RNTI     4
-# CS_RNTI     5
 
 
 
 def print_decode_type():
-    print("Supported Decoder:")
-    for key in all_decode_type.keys():
-        print(key + " - " + all_decode_type[key])
+    print("for example:\npython 3gpp_decoder.py mac-nr.ul-sch \"34 1e 4e 8c 47 2e 46 3f 00 00 00 00\"\n\
+python 3gpp_decoder.py lte-rrc.dl.dcch \"060800C1000426B7B134B634BA3C80\"")
 
+    print("[Supported L2 PDU Decoder:]")
+    for key in l2_decode_type.keys():
+        print(key)
+    
+    print("[Supported L3 Message Decoder:]")    
+    for key in l3_decode_type.keys():
+        print(key + " - " + l3_decode_type[key])
+
+    print("for example:\npython 3gpp_decoder.py mac-nr.ul-sch \"34 1e 4e 8c 47 2e 46 3f 00 00 00 00\"\n\
+python 3gpp_decoder.py lte-rrc.dl.dcch \"060800C1000426B7B134B634BA3C80\"")
+    
 class MyAction(argparse._StoreTrueAction):
     def __call__(self, parser, values, namespace, option_string=None):
         print_decode_type()
         parser.exit()
 
 if "__main__" == __name__:
-    parser = argparse.ArgumentParser(description='3GPP Decoder')
+    parser = argparse.ArgumentParser(description='3GPP Decoder\n')
     parser.add_argument('-l', '--list', action=MyAction, help='list decode types')
     parser.add_argument('decode_type', help='decode type')
     parser.add_argument('hex_string', help='the hex string to be decoded')
@@ -196,9 +198,9 @@ if "__main__" == __name__:
     decode_type = args.decode_type
     hex_string = args.hex_string
 
-    #if decode_type not in all_decode_type.keys()||decode_type not in exported_decode_pdu.keys():
-    #    print("Decode type not supported")
-    #    sys.exit()
+    if decode_type not in l3_decode_type.keys() and decode_type not in l2_decode_type.keys():
+        print("Decode type not supported")
+        sys.exit()
 
     if hex_string == '':
         print("No hex string input")
@@ -208,32 +210,33 @@ if "__main__" == __name__:
 
     re_result = re_result + " "
 
-    print('re_result:%s\n'%re_result)
+    print('The input stream:%s\n'%re_result)
 
     temp1 = tempfile.NamedTemporaryFile(mode="w+t", delete=False,dir=os.getcwd())
     temp2 = tempfile.NamedTemporaryFile(mode="w+b", delete=False,dir=os.getcwd())
     try:
         file_header = "000000"
         
-        if decode_type in all_decode_type.keys():
+        if decode_type in l3_decode_type.keys():
             file_string = file_header + re_result
             temp1.write(file_string)
             temp1.flush()
             subprocess.run([TEXT2PCAP_BIN, "-l 147", temp1.name, temp2.name])
             subprocess.run([WIRESHARK_BIN, '-o', 'uat:user_dlts:\"User 0 (DLT=147)\",\"' + decode_type + '\",\"0\",\"\",\"0\",\"\"', temp2.name])
     
-        elif decode_type in exported_decode_pdu.keys():
-            exported_hex_bytestring = binascii.b2a_hex(exported_decode_pdu[decode_type])
-            exported_hex_str =  bytes.decode(exported_hex_bytestring)  
+        elif decode_type in l2_decode_type.keys():
+            exported_hex_str =  bytes.decode(binascii.b2a_hex(l2_decode_type[decode_type][0].encode("utf8")))  
             
-            matchobj = re.match(r'(.*)\.(.*)',decode_type)
-            fixed_fields = matchobj.group(1)
-            fixed_fields += "02"+ exported_decode_pdu[decode_type][0] + exported_decode_pdu[decode_type][1] + "01"#"02 01 03 01"
+            matchobj = re.match(r'(.*?)\.(.*)',decode_type)
+            fixed_fields = bytes.decode(binascii.b2a_hex(matchobj.group(1).encode("utf8"))) 
+            
+            #"02(TDD，不影响解析) XX XX 01(PDU tag，pdu length实际没有占用字段)"
+            fixed_fields += "02"+ l2_decode_type[decode_type][1] + l2_decode_type[decode_type][2] + "01"
 
             file_string = "000d000b" + exported_hex_str.ljust(11*2,'0')  + "00000000" + fixed_fields
-            file_string, number = re.subn("([a-fA-F0-9][a-fA-F0-9])", " \\1", file_string.replace(" ",""))
+            file_string, number = re.subn(r"([a-fA-F0-9][a-fA-F0-9])", r" \1", file_string.replace(" ",""))
             file_string = file_header + file_string + re_result
-            print(file_string)
+            #print(file_string)
             temp1.write(file_string)
             temp1.flush()
             subprocess.run([TEXT2PCAP_BIN, "-l 252", temp1.name, temp2.name])
@@ -242,7 +245,7 @@ if "__main__" == __name__:
             print("Decode type not supported")
             
     finally:
-        print("finally close\n")
+        print("Decoding is complete!n")
         temp1.close()
         os.remove(temp1.name)
         temp2.close()
