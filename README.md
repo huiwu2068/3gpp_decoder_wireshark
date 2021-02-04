@@ -18,4 +18,5 @@ optional arguments:
 
 # Example
 python 3gpp_decoder.py mac-nr.ul-sch "34 1e 4e 8c 47 2e 46 3f 00 00 00 00"
+
 python 3gpp_decoder.py lte-rrc.dl.dcch "060800C1000426B7B134B634BA3C80"
