@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 #for example: 
 #python 3gpp_decoder.py mac-nr.ul-sch "34 1e 4e 8c 47 2e 46 3f 00 00 00 00"
-#python 3gpp_decoder.py lte-rrc.dl.dcch "060800C1000426B7B134B634BA3C80"
+#python 3gpp_decoder.py nr-rrc.ul.ccch "00 3e 40 8f 65 c8"
+#python 3gpp_decoder.py mac-nr.dl-sch.rar "52 00 20 33 73 86 46 bb 00 00 00 00"
 
 import sys
 import tempfile
@@ -16,8 +17,8 @@ import binascii
 #WIRESHARK_BIN='wireshark'
 
 # Windows Wireshark Path
-TEXT2PCAP_BIN='D:\\Program Files\\Wireshark\\text2pcap.exe'
-WIRESHARK_BIN='D:\\Program Files\\Wireshark\\Wireshark.exe'
+TEXT2PCAP_BIN=r'C:\Program Files\Wireshark\text2pcap.exe'
+WIRESHARK_BIN=r'C:\Program Files\Wireshark\Wireshark.exe'
 
 # DIRECTION_UPLINK   0
 # DIRECTION_DOWNLINK 1
@@ -30,11 +31,12 @@ WIRESHARK_BIN='D:\\Program Files\\Wireshark\\Wireshark.exe'
 # CS_RNTI     5 实际解码等价于C_RNTI
 
 l2_decode_type ={
-"mac-nr.dl-sch":['mac_nr_udp','01','03'],
-"mac-nr.pch":['mac_nr_udp','01','01'],
 "mac-nr.bch":['mac_nr_udp','01','00'],
-"mac-nr.dl-sch.bcch":['mac_nr_udp','01','04'],
-"mac-nr.ul-sch":['mac_nr_udp','00','03']
+"mac-nr.pch":['mac_nr_udp','01','01'],
+"mac-nr.dl-sch.rar":['mac_nr_udp','01','02'],
+"mac-nr.dl-sch":['mac_nr_udp','01','03'],
+"mac-nr.ul-sch":['mac_nr_udp','00','03'],
+"mac-nr.dl-sch.bcch":['mac_nr_udp','01','04']
 }
 
 l3_decode_type = {
@@ -55,81 +57,81 @@ l3_decode_type = {
 "nr-rrc.rrc_reconf":"NR RRC RRCReconfiguration",
 "nr-rrc.ue_mrdc_cap":"NR RRC UE-MRDC-Capability",
 "nr-rrc.ue_nr_cap":"NR RRC UE-NR-Capability",
-"rlc-lte":"4G RLC",
+#"rlc-lte":"4G RLC",
 #"mac-lte":"4G MAC",
 #"mac-nr":"5G MAC",
-"ip":"IP",
-"ranap":"RANAP",
-"rrc.dl.dcch":"3G RRCDL-DCCH-Message",
-"rrc.ul.dcch":"3G RRCUL-DCCH-Message",
-"rrc.dl.ccch":"3G RRCDL-CCCH-Message",
-"rrc.ul.ccch":"3G RRCUL-CCCH-Message",
-"rrc.pcch":"3G RRCPCCH-Message",
-"rrc.dl.shcch":"3G RRCDL-SHCCH-Message",
-"rrc.ul.shcch":"3G RRCUL-SHCCH-Message",
-"rrc.bcch.fach":"3G RRCBCCH-FACH-Message",
-"rrc.bcch.bch":"3G RRCBCCH-BCH-Message",
-"rrc.bcch.bch2":"3G RRCBCCH-BCH2-Message",
-"rrc.mcch":"3G RRCMCCH-Message",
-"rrc.msch":"3G RRCMSCH-Message",
-"rrc.sysinfo":"3G RRCSystemInformation-BCH",
-"rrc.sysinfo2":"3G RRCSystemInformation2-BCH",
-"rrc.sysinfo.cont":"3G RRCSystem-Information-Container",
-"rrc.si.mib":"3G RRCMasterInformationBlock",
-"rrc.si.sib1":"3G RRCSysInfoType1",
-"rrc.si.sib2":"3G RRCSysInfoType2",
-"rrc.si.sib3":"3G RRCSysInfoType3",
-"rrc.si.sib4":"3G RRCSysInfoType4",
-"rrc.si.sib5":"3G RRCSysInfoType5",
-"rrc.si.sib5bis":"3G RRCSysInfoType5bis",
-"rrc.si.sib6":"3G RRCSysInfoType6",
-"rrc.si.sib7":"3G RRCSysInfoType7",
-"rrc.si.sib8":"3G RRCSysInfoType8",
-"rrc.si.sib9":"3G RRCSysInfoType9",
-"rrc.si.sib10":"3G RRCSysInfoType10",
-"rrc.si.sib11":"3G RRCSysInfoType11",
-"rrc.si.sib11bis":"3G RRCSysInfoType11bis",
-"rrc.si.sib11ter":"3G RRCSysInfoType11ter",
-"rrc.si.sib12":"3G RRCSysInfoType12",
-"rrc.si.sib13":"3G RRCSysInfoType13",
-"rrc.si.sib13-1":"3G RRCSysInfoType13-1",
-"rrc.si.sib13-2":"3G RRCSysInfoType13-2",
-"rrc.si.sib13-3":"3G RRCSysInfoType13-3",
-"rrc.si.sib13-4":"3G RRCSysInfoType13-4",
-"rrc.si.sib14":"3G RRCSysInfoType14",
-"rrc.si.sib15":"3G RRCSysInfoType15",
-"rrc.si.sib15bis":"3G RRCSysInfoType15bis",
-"rrc.si.sib15-1":"3G RRCSysInfoType15-1",
-"rrc.si.sib15-1bis":"3G RRCSysInfoType15-1bis",
-"rrc.si.sib15-1ter":"3G RRCSysInfoType15-1ter",
-"rrc.si.sib15-2":"3G RRCSysInfoType15-2",
-"rrc.si.sib15-2bis":"3G RRCSysInfoType15-2bis",
-"rrc.si.sib15-2ter":"3G RRCSysInfoType15-2ter",
-"rrc.si.sib15-3":"3G RRCSysInfoType15-3",
-"rrc.si.sib15-3bis":"3G RRCSysInfoType15-3bis",
-"rrc.si.sib15-4":"3G RRCSysInfoType15-4",
-"rrc.si.sib15-5":"3G RRCSysInfoType15-5",
-"rrc.si.sib15-6":"3G RRCSysInfoType15-6",
-"rrc.si.sib15-7":"3G RRCSysInfoType15-7",
-"rrc.si.sib15-8":"3G RRCSysInfoType15-8",
-"rrc.si.sib16":"3G RRCSysInfoType16",
-"rrc.si.sib17":"3G RRCSysInfoType17",
-"rrc.si.sib18":"3G RRCSysInfoType18",
-"rrc.si.sib19":"3G RRCSysInfoType19",
-"rrc.si.sib20":"3G RRCSysInfoType20",
-"rrc.si.sib21":"3G RRCSysInfoType21",
-"rrc.si.sib22":"3G RRCSysInfoType22",
-"rrc.si.sib23":"3G RRCSysInfoType23",
-"rrc.si.sib24":"3G RRCSysInfoType24",
-"rrc.si.sib25":"3G RRCSysInfoType25",
-"rrc.si.sb1":"3G RRCSysInfoTypeSB1",
-"rrc.si.sb2":"3G RRCSysInfoTypeSB2",
-"rrc.si.sb3":"3G RRCSysInfoTypeSB3",
-"rrc.irat.ho_to_utran_cmd":"3G RRCHandoverToUTRANCommand",
-"rrc.irat.irat_ho_info":"3G RRCInterRATHandoverInfo",
-"rrc.ue_radio_access_cap_info":"3G RRCUE-RadioAccessCapabilityInfo",
-"rrc.s_to_trnc_cont":"3G RRCToTargetRNC-Container",
-"rrc.t_to_srnc_cont":"3G RRCTargetRNC-ToSourceRNC-Container",
+#"ip":"IP",
+#"ranap":"RANAP",
+#"rrc.dl.dcch":"3G RRCDL-DCCH-Message",
+#"rrc.ul.dcch":"3G RRCUL-DCCH-Message",
+#"rrc.dl.ccch":"3G RRCDL-CCCH-Message",
+#"rrc.ul.ccch":"3G RRCUL-CCCH-Message",
+#"rrc.pcch":"3G RRCPCCH-Message",
+#"rrc.dl.shcch":"3G RRCDL-SHCCH-Message",
+#"rrc.ul.shcch":"3G RRCUL-SHCCH-Message",
+#"rrc.bcch.fach":"3G RRCBCCH-FACH-Message",
+#"rrc.bcch.bch":"3G RRCBCCH-BCH-Message",
+#"rrc.bcch.bch2":"3G RRCBCCH-BCH2-Message",
+#"rrc.mcch":"3G RRCMCCH-Message",
+#"rrc.msch":"3G RRCMSCH-Message",
+#"rrc.sysinfo":"3G RRCSystemInformation-BCH",
+#"rrc.sysinfo2":"3G RRCSystemInformation2-BCH",
+#"rrc.sysinfo.cont":"3G RRCSystem-Information-Container",
+#"rrc.si.mib":"3G RRCMasterInformationBlock",
+#"rrc.si.sib1":"3G RRCSysInfoType1",
+#"rrc.si.sib2":"3G RRCSysInfoType2",
+#"rrc.si.sib3":"3G RRCSysInfoType3",
+#"rrc.si.sib4":"3G RRCSysInfoType4",
+#"rrc.si.sib5":"3G RRCSysInfoType5",
+#"rrc.si.sib5bis":"3G RRCSysInfoType5bis",
+#"rrc.si.sib6":"3G RRCSysInfoType6",
+#"rrc.si.sib7":"3G RRCSysInfoType7",
+#"rrc.si.sib8":"3G RRCSysInfoType8",
+#"rrc.si.sib9":"3G RRCSysInfoType9",
+#"rrc.si.sib10":"3G RRCSysInfoType10",
+#"rrc.si.sib11":"3G RRCSysInfoType11",
+#"rrc.si.sib11bis":"3G RRCSysInfoType11bis",
+#"rrc.si.sib11ter":"3G RRCSysInfoType11ter",
+#"rrc.si.sib12":"3G RRCSysInfoType12",
+#"rrc.si.sib13":"3G RRCSysInfoType13",
+#"rrc.si.sib13-1":"3G RRCSysInfoType13-1",
+#"rrc.si.sib13-2":"3G RRCSysInfoType13-2",
+#"rrc.si.sib13-3":"3G RRCSysInfoType13-3",
+#"rrc.si.sib13-4":"3G RRCSysInfoType13-4",
+#"rrc.si.sib14":"3G RRCSysInfoType14",
+#"rrc.si.sib15":"3G RRCSysInfoType15",
+#"rrc.si.sib15bis":"3G RRCSysInfoType15bis",
+#"rrc.si.sib15-1":"3G RRCSysInfoType15-1",
+#"rrc.si.sib15-1bis":"3G RRCSysInfoType15-1bis",
+#"rrc.si.sib15-1ter":"3G RRCSysInfoType15-1ter",
+#"rrc.si.sib15-2":"3G RRCSysInfoType15-2",
+#"rrc.si.sib15-2bis":"3G RRCSysInfoType15-2bis",
+#"rrc.si.sib15-2ter":"3G RRCSysInfoType15-2ter",
+#"rrc.si.sib15-3":"3G RRCSysInfoType15-3",
+#"rrc.si.sib15-3bis":"3G RRCSysInfoType15-3bis",
+#"rrc.si.sib15-4":"3G RRCSysInfoType15-4",
+#"rrc.si.sib15-5":"3G RRCSysInfoType15-5",
+#"rrc.si.sib15-6":"3G RRCSysInfoType15-6",
+#"rrc.si.sib15-7":"3G RRCSysInfoType15-7",
+#"rrc.si.sib15-8":"3G RRCSysInfoType15-8",
+#"rrc.si.sib16":"3G RRCSysInfoType16",
+#"rrc.si.sib17":"3G RRCSysInfoType17",
+#"rrc.si.sib18":"3G RRCSysInfoType18",
+#"rrc.si.sib19":"3G RRCSysInfoType19",
+#"rrc.si.sib20":"3G RRCSysInfoType20",
+#"rrc.si.sib21":"3G RRCSysInfoType21",
+#"rrc.si.sib22":"3G RRCSysInfoType22",
+#"rrc.si.sib23":"3G RRCSysInfoType23",
+#"rrc.si.sib24":"3G RRCSysInfoType24",
+#"rrc.si.sib25":"3G RRCSysInfoType25",
+#"rrc.si.sb1":"3G RRCSysInfoTypeSB1",
+#"rrc.si.sb2":"3G RRCSysInfoTypeSB2",
+#"rrc.si.sb3":"3G RRCSysInfoTypeSB3",
+#"rrc.irat.ho_to_utran_cmd":"3G RRCHandoverToUTRANCommand",
+#"rrc.irat.irat_ho_info":"3G RRCInterRATHandoverInfo",
+#"rrc.ue_radio_access_cap_info":"3G RRCUE-RadioAccessCapabilityInfo",
+#"rrc.s_to_trnc_cont":"3G RRCToTargetRNC-Container",
+#"rrc.t_to_srnc_cont":"3G RRCTargetRNC-ToSourceRNC-Container",
 "lte-rrc.ue_radio_access_cap_info":"4G UERadioAccessCapabilityInformation",
 "lte-rrc.ue_radio_access_cap_info.nb":"4G UERadioAccessCapabilityInformation-NB",
 "lte-rrc.ue_radio_paging_info":"4G UERadioPagingInformation",
@@ -164,9 +166,6 @@ l3_decode_type = {
 
 
 def print_decode_type():
-    print("for example:\npython 3gpp_decoder.py mac-nr.ul-sch \"34 1e 4e 8c 47 2e 46 3f 00 00 00 00\"\n\
-python 3gpp_decoder.py lte-rrc.dl.dcch \"060800C1000426B7B134B634BA3C80\"")
-
     print("[Supported L2 PDU Decoder:]")
     for key in l2_decode_type.keys():
         print(key)
@@ -175,25 +174,30 @@ python 3gpp_decoder.py lte-rrc.dl.dcch \"060800C1000426B7B134B634BA3C80\"")
     for key in l3_decode_type.keys():
         print(key + " - " + l3_decode_type[key])
 
-    print("for example:\npython 3gpp_decoder.py mac-nr.ul-sch \"34 1e 4e 8c 47 2e 46 3f 00 00 00 00\"\n\
-python 3gpp_decoder.py lte-rrc.dl.dcch \"060800C1000426B7B134B634BA3C80\"")
-    
-class MyAction(argparse._StoreTrueAction):
+def print_for_example():
+    print("for example:")
+    print("python 3gpp_decoder.py mac-nr.ul-sch \"34 1e 4e 8c 47 2e 46 3f 00 00 00 00\"")
+    print("python 3gpp_decoder.py nr-rrc.ul.ccch \"003e408f65c8\"")
+    print("python 3gpp_decoder.py mac-nr.dl-sch.rar \"52 00 20 33 73 86 46 bb 00 00 00 00\"")
+
+class ListAction(argparse._StoreTrueAction):
     def __call__(self, parser, values, namespace, option_string=None):
         print_decode_type()
         parser.exit()
 
+class ForExampleAction(argparse._StoreTrueAction):
+    def __call__(self, parser, values, namespace, option_string=None):
+        print_for_example()
+        parser.exit()
+        
 if "__main__" == __name__:
     parser = argparse.ArgumentParser(description='3GPP Decoder\n')
-    parser.add_argument('-l', '--list', action=MyAction, help='list decode types')
+    parser.add_argument('-l', '--list', action=ListAction, help='list decode types')
+    parser.add_argument('-e', '--example',action=ForExampleAction, help='for example')
     parser.add_argument('decode_type', help='decode type')
     parser.add_argument('hex_string', help='the hex string to be decoded')
 
     args = parser.parse_args()
-
-    if args.list:
-        print_decode_type()
-        sys.exit()
 
     decode_type = args.decode_type
     hex_string = args.hex_string
@@ -207,7 +211,8 @@ if "__main__" == __name__:
         sys.exit()
 
     re_result, number = re.subn("([a-fA-F0-9][a-fA-F0-9])", " \\1", hex_string.replace(" ",""))
-
+    re_result, number = re.subn(r"^0x", "", re_result,flags=re.I)
+    
     re_result = re_result + " "
 
     print('The input stream:%s\n'%re_result)
