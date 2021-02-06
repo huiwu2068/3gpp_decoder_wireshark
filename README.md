@@ -18,5 +18,7 @@ optional arguments:
 
 # Example
 python 3gpp_decoder.py mac-nr.ul-sch "34 1e 4e 8c 47 2e 46 3f 00 00 00 00"
+
 python 3gpp_decoder.py nr-rrc.ul.ccch "00 3e 40 8f 65 c8"
+
 python 3gpp_decoder.py mac-nr.dl-sch.rar "52 00 20 33 73 86 46 bb 00 00 00 00"
