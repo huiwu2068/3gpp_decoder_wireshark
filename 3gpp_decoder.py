@@ -44,6 +44,7 @@ l3_decode_type = {
 "s1ap":"S1AP",
 "x2ap":"X2AP",
 "f1ap":"F1AP",
+"nas-5gs":"5G NAS"
 "nr-rrc.ue_radio_paging_info":"NR RRC UERadioPagingInformation",
 "nr-rrc.ue_radio_access_cap_info":"NR UERadioAccessCapabilityInformation",
 "nr-rrc.bcch.bch":"NR BCCH-BCH-Message",
